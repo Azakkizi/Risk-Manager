@@ -90,8 +90,8 @@ class RiskListPage extends StatefulWidget {
 class _RiskListPageState extends State<RiskListPage> {
   static List<RiskItem> riskItems = [
     RiskItem('1. derece deprem bölgesi', RiskPriority.Yuksek),
-    RiskItem('Kolonların durumu', RiskPriority.Orta),
-    RiskItem('Kitaplık sabit değil', RiskPriority.Dusuk),
+    RiskItem('Yüksek kolesterol seviye', RiskPriority.Orta),
+    RiskItem('Borsa yatırımlarında değer kaybı', RiskPriority.Dusuk),
   ];
   final myController = TextEditingController();
   @override
@@ -130,21 +130,13 @@ class _RiskListPageState extends State<RiskListPage> {
                     fontSize: 16,
                   ),
                 ),
-                SizedBox(width: 10),
-                Text(
-                  'Sil',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
               ],
             ),
           ),
           const Divider(
             color: Colors.black,
             height: 1,
-            thickness: 1,
+            thickness: 2,
             indent: 16.0,
             endIndent: 16.0,
           ),
@@ -153,14 +145,21 @@ class _RiskListPageState extends State<RiskListPage> {
               itemCount: riskItems.length,
               itemBuilder: (BuildContext context, int index) {
                 final riskItem = riskItems[index];
-                return ListTile(
-                  leading: Icon(Icons.warning,
-                      color: _getRiskColor(riskItem.priority)),
-                  title: Text(riskItem.name),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      DropdownButton<RiskPriority>(
+
+                return Column(
+                  children: [
+                    ListTile(
+                      onTap: () {
+                        setState(() {
+                          riskItem.isExpanded = !riskItem.isExpanded;
+                        });
+                      },
+                      leading: Icon(
+                        Icons.warning,
+                        color: _getRiskColor(riskItem.priority),
+                      ),
+                      title: Text(riskItem.name),
+                      trailing: DropdownButton<RiskPriority>(
                         value: riskItem.priority,
                         icon: const Icon(Icons.arrow_drop_down_rounded),
                         onChanged: (RiskPriority? newValue) {
@@ -179,16 +178,90 @@ class _RiskListPageState extends State<RiskListPage> {
                           );
                         }).toList(),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_forever_outlined),
-                        onPressed: () {
-                          setState(() {
-                            riskItems.removeAt(index);
-                          });
-                        },
+                    ),
+                    if (riskItem.isExpanded)
+                      Container(
+                        color: Colors.green[200],
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 30, vertical: 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Text(
+                                      'Risk Tipi: ',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const Text('Sağlık riski'),
+                                  ],
+                                ),
+                                const SizedBox(height: 8.0),
+                                Row(
+                                  children: [
+                                    const Text(
+                                      'Oluşma Olasılığı: ',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const Text('Orta'),
+                                  ],
+                                ),
+                                const SizedBox(height: 8.0),
+                                Row(
+                                  children: [
+                                    const Text(
+                                      'Etki Derecesi: ',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const Text('Yüksek'),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 50),
+                            ElevatedButton(
+                              onPressed: () {
+                                // Düzenle butonuna basıldığında yapılacak işlemler
+                              },
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                backgroundColor: Colors.green,
+                              ),
+                              child: const Text('Düzenle'),
+                            ),
+                            const SizedBox(width: 10),
+                            ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  riskItems.removeAt(index);
+                                });
+                              },
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                backgroundColor: Colors.red,
+                              ),
+                              child: const Text('Sil'),
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
+                    const Divider(
+                      color: Colors.black,
+                      height: 1,
+                      thickness: 1,
+                      indent: 16.0,
+                      endIndent: 16.0,
+                    ),
+                  ],
                 );
               },
             ),
@@ -207,6 +280,7 @@ class _RiskListPageState extends State<RiskListPage> {
   void _showAddRiskDialog() {
     String? riskName;
     RiskPriority? selectedPriority;
+    String? riskTipi;
 
     showDialog(
       context: context,
@@ -227,18 +301,100 @@ class _RiskListPageState extends State<RiskListPage> {
                       riskName = value;
                     },
                   ),
-                  ...RiskPriority.values.map((priority) {
-                    return RadioListTile<RiskPriority>(
-                      title: Text(priority.toString().split('.').last),
-                      value: priority,
-                      groupValue: selectedPriority,
-                      onChanged: (RiskPriority? value) {
-                        setState(() {
-                          selectedPriority = value;
-                        });
-                      },
-                    );
-                  }).toList(),
+                  const SizedBox(height: 15),
+                  const Text(
+                    'Öncelik',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  DropdownButton<RiskPriority>(
+                    value: selectedPriority,
+                    hint: const Text('Bir öncelik derecesi seçin'),
+                    onChanged: (RiskPriority? value) {
+                      setState(() {
+                        selectedPriority = value;
+                      });
+                    },
+                    items: RiskPriority.values.map((priority) {
+                      return DropdownMenuItem<RiskPriority>(
+                        value: priority,
+                        child: Text(priority.toString().split('.').last),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 15),
+                  const Text(
+                    'Risk Tipi',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  DropdownButton<String>(
+                    value: riskTipi,
+                    hint: const Text('Bir risk tipi seçin'),
+                    onChanged: (String? value) {
+                      setState(() {
+                        riskTipi = value;
+                      });
+                    },
+                    items: [
+                      'Sağlık Riski',
+                      'Deprem Riski',
+                      'Güvenlik Riski',
+                      'Finansal Risk',
+                      'Trafik Riski',
+                    ].map((String priority) {
+                      return DropdownMenuItem<String>(
+                        value: priority,
+                        child: Text(priority),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 15),
+                  const Text(
+                    'Oluşma Olasılığı',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  DropdownButton<RiskPriority>(
+                    value: selectedPriority,
+                    hint: const Text('Bir olasılık derecesi seçin'),
+                    onChanged: (RiskPriority? value) {
+                      setState(() {
+                        selectedPriority = value;
+                      });
+                    },
+                    items: RiskPriority.values.map((priority) {
+                      return DropdownMenuItem<RiskPriority>(
+                        value: priority,
+                        child: Text(priority.toString().split('.').last),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 15),
+                  const Text(
+                    'Etki Derecesi',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  DropdownButton<RiskPriority>(
+                    value: selectedPriority,
+                    hint: const Text('Bir etki derecesi seçin'),
+                    onChanged: (RiskPriority? value) {
+                      setState(() {
+                        selectedPriority = value;
+                      });
+                    },
+                    items: RiskPriority.values.map((priority) {
+                      return DropdownMenuItem<RiskPriority>(
+                        value: priority,
+                        child: Text(priority.toString().split('.').last),
+                      );
+                    }).toList(),
+                  ),
                 ],
               ),
               actions: <Widget>[
@@ -290,8 +446,9 @@ enum RiskPriority {
 class RiskItem {
   String name;
   RiskPriority priority;
+  bool isExpanded;
 
-  RiskItem(this.name, this.priority);
+  RiskItem(this.name, this.priority, {this.isExpanded = false});
 }
 
 class PrecautionPage extends StatefulWidget {
@@ -305,8 +462,11 @@ class _PrecautionPageState extends State<PrecautionPage> {
   List<PrecautionItem> precautionItems = [
     PrecautionItem("Taşınmak için yeni ev araştırılacak",
         _RiskListPageState.riskItems[0].name),
+    PrecautionItem("Kan testi için hastaneye gidilecek",
+        _RiskListPageState.riskItems[1].name),
     PrecautionItem(
-        "Kolon testi yapılacak", _RiskListPageState.riskItems[1].name)
+        "Borsa yatırımlarında değer kaybı riskini azaltmak için portföyü çeşitlendirme",
+        _RiskListPageState.riskItems[2].name)
   ];
 
   @override
@@ -322,13 +482,24 @@ class _PrecautionPageState extends State<PrecautionPage> {
           return ListTile(
             title: Text(precautionItem.name),
             subtitle: Text(precautionItem.riskItem),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete_forever_outlined),
-              onPressed: () {
-                setState(() {
-                  precautionItems.removeAt(index);
-                });
-              },
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: () {
+                    // Edit işlemini gerçekleştirecek kodu buraya ekleyin
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_forever_outlined),
+                  onPressed: () {
+                    setState(() {
+                      precautionItems.removeAt(index);
+                    });
+                  },
+                ),
+              ],
             ),
           );
         },
